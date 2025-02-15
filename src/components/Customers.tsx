@@ -14,33 +14,26 @@ interface Customer {
 export default function Customers() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [search, setSearch] = useState<string>("");
-  const [sortOrder, setSortOrder] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<string>("");
+  const [desc, setDesc] = useState<boolean>(true);
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [pageSize] = useState<number>(5);
+  const [pageSize] = useState<number>(10);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [form] = Form.useForm();
 
   useEffect(() => {
     loadCustomers();
-  }, []);
+  }, [search, sortBy, desc, currentPage, pageSize]);
 
   const loadCustomers = async () => {
-    const data = await customerService.getAll();
-    setCustomers(data);
+    const data = await customerService.getAll(search, sortBy, desc, currentPage, pageSize);
+    setCustomers(data.customers);
   };
 
   const handleDelete = async (id: number) => {
     await customerService.delete(id);
     loadCustomers();
-  };
-
-  const handleSearch = (value: string) => {
-    setSearch(value.toLowerCase());
-  };
-
-  const handleSort = (order: string) => {
-    setSortOrder(order);
   };
 
   const handleAdd = () => {
@@ -67,26 +60,26 @@ export default function Customers() {
     });
   };
 
-  const filteredCustomers = customers.filter(
-    (c) => c.name.toLowerCase().includes(search) || c.email.toLowerCase().includes(search)
-  );
-
-  const sortedCustomers = [...filteredCustomers].sort((a, b) => {
-    if (!sortOrder) return 0;
-    return sortOrder === "asc" ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
-  });
-
   return (
     <div className="p-4">
       <div className="flex mb-4 gap-2">
-        <Search placeholder="Search customers" onSearch={handleSearch} enterButton />
+        <Search placeholder="Search customers" onSearch={setSearch} enterButton />
         <Select
           placeholder="Sort by"
-          onChange={handleSort}
+          onChange={setSortBy}
           className="w-32"
           options={[
-            { value: "asc", label: "Name Asc" },
-            { value: "desc", label: "Name Desc" }
+            { value: "name", label: "Name" },
+            { value: "email", label: "Email" }
+          ]}
+        />
+        <Select
+          placeholder="Order"
+          onChange={value => setDesc(value === "true")}
+          className="w-32"
+          options={[
+            { value: "true", label: "Descending" },
+            { value: "false", label: "Ascending" }
           ]}
         />
         <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
@@ -94,7 +87,7 @@ export default function Customers() {
         </Button>
       </div>
       <Table
-        dataSource={sortedCustomers.slice((currentPage - 1) * pageSize, currentPage * pageSize)}
+        dataSource={customers}
         rowKey="id"
         columns={[
           { title: "ID", dataIndex: "id" },
@@ -110,14 +103,7 @@ export default function Customers() {
             ),
           },
         ]}
-        pagination={false}
-      />
-      <Pagination
-        current={currentPage}
-        pageSize={pageSize}
-        total={filteredCustomers.length}
-        onChange={setCurrentPage}
-        className="mt-4"
+        pagination={{ current: currentPage, pageSize, total: customers.length, onChange: setCurrentPage }}
       />
       <Modal
         title={editingCustomer ? "Edit Customer" : "Add Customer"}
