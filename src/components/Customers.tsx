@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Table, Input, Button, Pagination, Select, Modal, Form } from "antd";
 import { EditOutlined, DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 import Search from "antd/es/input/Search";
 import "antd/dist/reset.css";
+import customerService from "../ApiService/CustomerService";
 
 interface Customer {
   id: number;
@@ -10,14 +11,8 @@ interface Customer {
   email: string;
 }
 
-const initialCustomers: Customer[] = [
-  { id: 1, name: "John Doe", email: "john@example.com" },
-  { id: 2, name: "Jane Smith", email: "jane@example.com" },
-  { id: 3, name: "Alice Brown", email: "alice@example.com" },
-];
-
 export default function Customers() {
-  const [customers, setCustomers] = useState<Customer[]>(initialCustomers);
+  const [customers, setCustomers] = useState<Customer[]>([]);
   const [search, setSearch] = useState<string>("");
   const [sortOrder, setSortOrder] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -26,8 +21,18 @@ export default function Customers() {
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [form] = Form.useForm();
 
-  const handleDelete = (id: number) => {
-    setCustomers(customers.filter((customer) => customer.id !== id));
+  useEffect(() => {
+    loadCustomers();
+  }, []);
+
+  const loadCustomers = async () => {
+    const data = await customerService.getAll();
+    setCustomers(data);
+  };
+
+  const handleDelete = async (id: number) => {
+    await customerService.delete(id);
+    loadCustomers();
   };
 
   const handleSearch = (value: string) => {
@@ -50,14 +55,15 @@ export default function Customers() {
     setIsModalOpen(true);
   };
 
-  const handleSave = () => {
-    form.validateFields().then((values) => {
+  const handleSave = async () => {
+    form.validateFields().then(async (values) => {
       if (editingCustomer) {
-        setCustomers(customers.map((cust) => (cust.id === editingCustomer.id ? { ...cust, ...values } : cust)));
+        await customerService.update(editingCustomer.id, values);
       } else {
-        setCustomers([...customers, { id: Date.now(), ...values }]);
+        await customerService.create(values);
       }
       setIsModalOpen(false);
+      loadCustomers();
     });
   };
 
