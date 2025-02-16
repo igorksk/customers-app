@@ -108,7 +108,7 @@ export default function Customers() {
           pagination={{
             current: currentPage,
             pageSize,
-            total: totalCustomers, // Теперь total корректный
+            total: totalCustomers,
             onChange: setCurrentPage
           }}
         />
