@@ -4,6 +4,7 @@ import { EditOutlined, DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 import Search from "antd/es/input/Search";
 import "antd/dist/reset.css";
 import customerService from "../ApiService/CustomerService";
+import "./Customers.css";
 
 interface Customer {
   id: number;
@@ -61,8 +62,8 @@ export default function Customers() {
   };
 
   return (
-    <div className="p-4">
-      <div className="flex mb-4 gap-2">
+    <div className="customers-container">
+      <div className="customers-box">
         <Search placeholder="Search customers" onSearch={setSearch} enterButton />
         <Select
           placeholder="Sort by"
@@ -85,26 +86,26 @@ export default function Customers() {
         <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
           Add
         </Button>
+        <Table
+          dataSource={customers}
+          rowKey="id"
+          columns={[
+            { title: "ID", dataIndex: "id" },
+            { title: "Name", dataIndex: "name" },
+            { title: "Email", dataIndex: "email" },
+            {
+              title: "Actions",
+              render: (_: any, record: Customer) => (
+                <div className="flex gap-2">
+                  <Button icon={<EditOutlined />} onClick={() => handleEdit(record)} />
+                  <Button icon={<DeleteOutlined />} danger onClick={() => handleDelete(record.id)} />
+                </div>
+              ),
+            },
+          ]}
+          pagination={{ current: currentPage, pageSize, total: customers.length, onChange: setCurrentPage }}
+        />
       </div>
-      <Table
-        dataSource={customers}
-        rowKey="id"
-        columns={[
-          { title: "ID", dataIndex: "id" },
-          { title: "Name", dataIndex: "name" },
-          { title: "Email", dataIndex: "email" },
-          {
-            title: "Actions",
-            render: (_: any, record: Customer) => (
-              <div className="flex gap-2">
-                <Button icon={<EditOutlined />} onClick={() => handleEdit(record)} />
-                <Button icon={<DeleteOutlined />} danger onClick={() => handleDelete(record.id)} />
-              </div>
-            ),
-          },
-        ]}
-        pagination={{ current: currentPage, pageSize, total: customers.length, onChange: setCurrentPage }}
-      />
       <Modal
         title={editingCustomer ? "Edit Customer" : "Add Customer"}
         open={isModalOpen}
