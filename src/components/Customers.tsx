@@ -14,6 +14,7 @@ interface Customer {
 
 export default function Customers() {
   const [customers, setCustomers] = useState<Customer[]>([]);
+  const [totalCustomers, setTotalCustomers] = useState<number>(0);
   const [search, setSearch] = useState<string>("");
   const [sortBy, setSortBy] = useState<string>("");
   const [desc, setDesc] = useState<boolean>(true);
@@ -30,6 +31,7 @@ export default function Customers() {
   const loadCustomers = async () => {
     const data = await customerService.getAll(search, sortBy, desc, currentPage, pageSize);
     setCustomers(data.customers);
+    setTotalCustomers(data.total); // Теперь total правильно устанавливается
   };
 
   const handleDelete = async (id: number) => {
@@ -103,7 +105,12 @@ export default function Customers() {
               ),
             },
           ]}
-          pagination={{ current: currentPage, pageSize, total: customers.length, onChange: setCurrentPage }}
+          pagination={{
+            current: currentPage,
+            pageSize,
+            total: totalCustomers, // Теперь total корректный
+            onChange: setCurrentPage
+          }}
         />
       </div>
       <Modal
