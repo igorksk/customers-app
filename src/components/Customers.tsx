@@ -31,7 +31,7 @@ export default function Customers() {
   const loadCustomers = async () => {
     const data = await customerService.getAll(search, sortBy, desc, currentPage, pageSize);
     setCustomers(data.customers);
-    setTotalCustomers(data.total); // Теперь total правильно устанавливается
+    setTotalCustomers(data.total);
   };
 
   const handleDelete = async (id: number) => {
